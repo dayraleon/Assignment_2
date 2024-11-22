@@ -1,0 +1,98 @@
+class Resource:
+    def __init__(self, name, total_units):
+        self.name = name
+        self.total_units = total_units
+        self.available_units = total_units
+
+class Process:
+    def __init__(self, name, max_request):
+        self.name = name
+        self.max_request = max_request  # (R1, R2, R3)
+        self.current_allocation = (0, 0, 0)  # (R1, R2, R3)
+        self.waiting_for = (0, 0, 0)  # Tracks what it's waiting for
+
+    def request_resources(self, resources):
+        # Check if enough units are available for each requested resource
+        request_possible = True
+        for i, request in enumerate(self.max_request):
+            if request > resources[i].available_units:
+                self.waiting_for = tuple(
+                    request if i == j else self.waiting_for[j]
+                    for j in range(len(resources))
+                )
+                request_possible = False
+        return request_possible
+
+    def allocate_resources(self, resources):
+        # Allocate the resources to the process if the request was possible
+        for i, request in enumerate(self.max_request):
+            if request <= resources[i].available_units:
+                self.current_allocation = tuple(
+                    x + request if i == j else x for j, x in enumerate(self.current_allocation)
+                )
+                resources[i].available_units -= request
+
+    def release_resources(self, resources):
+        # Release resources held by the process
+        for i, allocation in enumerate(self.current_allocation):
+            self.current_allocation = tuple(
+                x - allocation if i == j else x for j, x in enumerate(self.current_allocation)
+            )
+            resources[i].available_units += allocation
+
+def detect_deadlock(processes, resources):
+    # Simplified deadlock detection (cyclic dependency)
+    waiting_processes = []
+    for process in processes:
+        if process.waiting_for != (0, 0, 0):
+            waiting_processes.append(process)
+    
+    # Simple circular check (not fully optimized, for basic use)
+    for i in range(len(waiting_processes)):
+        for j in range(i + 1, len(waiting_processes)):
+            if all(waiting_processes[i].waiting_for[k] == waiting_processes[j].current_allocation[k] for k in range(len(resources))):
+                return True
+    return False
+
+def simulate_system():
+    # Initialize resources
+    R1 = Resource("R1", 3)
+    R2 = Resource("R2", 2)
+    R3 = Resource("R3", 2)
+
+    # Initialize processes with max requests
+    P1 = Process("P1", (0, 1, 1))
+    P2 = Process("P2", (1, 1, 1))
+    P3 = Process("P3", (1, 0, 1))
+
+    processes = [P1, P2, P3]
+    resources = [R1, R2, R3]
+
+    # Step 1: P1 requests resources
+    if P1.request_resources(resources):
+        P1.allocate_resources(resources)
+        print("P1 allocated resources.")
+    else:
+        print("P1 is waiting for resources.")
+
+    # Step 2: P2 requests resources
+    if P2.request_resources(resources):
+        P2.allocate_resources(resources)
+        print("P2 allocated resources.")
+    else:
+        print("P2 is waiting for resources.")
+
+    # Step 3: P3 requests resources
+    if P3.request_resources(resources):
+        P3.allocate_resources(resources)
+        print("P3 allocated resources.")
+    else:
+        print("P3 is waiting for resources.")
+
+    # Step 4: Detect deadlock
+    if detect_deadlock(processes, resources):
+        print("Deadlock detected!")
+    else:
+        print("No deadlock.")
+
+simulate_system()
