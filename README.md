@@ -35,7 +35,4 @@ The program implements basic resource allocation logic, handles deadlock detecti
 
 ### Steps to Run:
 1. **Clone the Repository**:
-   If you haven't already, clone the repository to your local machine.
-   ```bash
-   git clone https://github.com/yourusername/resource-allocation-simulation.git
-   cd resource-allocation-simulation
+   git clone https://github.com/dayraleon/Assignment_2.git
